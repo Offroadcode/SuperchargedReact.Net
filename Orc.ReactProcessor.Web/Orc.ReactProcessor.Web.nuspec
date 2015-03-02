@@ -12,7 +12,7 @@
   </metadata>
   <files>
     <file src="bin\ClearScript.dll" target="lib\net45"/>
-
+    <file src="bin\Orc.ReactProcessor.Web.dll" target="lib\net45"/>
 	<file src="bin\Orc.ReactProcessor.Core.dll" target="lib\net45"/>
 
 	<file src="ClearScript.V8\ClearScriptV8-32.dll" target="content\ClearScript.V8"/>
