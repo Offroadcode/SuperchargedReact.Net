@@ -1,0 +1,12 @@
+{
+  "name": "reactprocessor",
+  "version": "0.1.0",
+  "devDependencies": {
+    "jsx-loader": "^0.12.2",
+    "webpack": "^1.6.0"
+  },
+  "dependencies": {
+    "react": "^0.12.2",
+    "react-router": "^0.12.4"
+  }
+}

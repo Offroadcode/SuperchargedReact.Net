@@ -1,0 +1,7 @@
+syntax: glob
+Orc.ReactProcessor.Core/bin/*
+Orc.ReactProcessor.Core/obj/*
+Orc.ReactProcessor.ExampleBundle/node_modules/*
+packages/*
+Orc.ReactProcessor.Runner/obj/*
+Orc.ReactProcessor.Runner/bin/*
