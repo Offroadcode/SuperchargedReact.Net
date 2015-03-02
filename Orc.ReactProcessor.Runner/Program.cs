@@ -11,6 +11,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
+using Newtonsoft.Json;
 using Orc.ReactProcessor.Core;
 
 namespace Orc.ReactProcessor.Runner
@@ -27,13 +28,14 @@ namespace Orc.ReactProcessor.Runner
 
         static void ThreadChecker()
         {
-            var runner = new ReactRunner(@"C:\Users\Stephen\Documents\visual studio 2013\Projects\Orc.ReactProcessor\Orc.ReactProcessor.ExampleBundle\bundle.js", true, true, true);
+            var runner = new ReactRunner(@"C:\Users\Stephen\Documents\visual studio 2013\Projects\Orc.ReactProcessor\Orc.ReactProcessor.ExampleBundle\bundle.js", true, true, true, new JsonSerializerSettings());
 
             Parallel.For(0, 100, new ParallelOptions() { MaxDegreeOfParallelism = 50 }, (i, state) =>
             {
                 Console.WriteLine("Starting:" + i);
                 var testString = "helloWorld" + i;
-                var output = runner.Execute("reactApp", "/tester", new { testString = testString });
+                var browserOutput = "";
+                var output = runner.Execute("reactApp", "/tester", new { testString = testString }, out browserOutput);
                 if (!output.Contains(testString))
                 {
                     throw new Exception("Not Thread Safe.... uh oh!");
@@ -98,7 +100,7 @@ namespace Orc.ReactProcessor.Runner
 
             using (var runner =
                 new ReactRunner(@"D:\work\Olympic\BookingEngine\Build\Olympic.BookingEngine\assets\js\bundle.js",
-                    enableFileWatcher, enableCompilation, disableGlobalMembers))
+                    enableFileWatcher, enableCompilation, disableGlobalMembers, new JsonSerializerSettings()))
             {
 
                 init.Stop();
@@ -112,8 +114,9 @@ namespace Orc.ReactProcessor.Runner
                 for (int i = 0; i < 20; i++)
                 {
                     init.Reset();
+                    string outputStr = "";
                     init.Start();
-                    runner.Execute("reactApp", "/search/AccommodationOnly", props);
+                    runner.Execute("reactApp", "/search/AccommodationOnly", props, out outputStr);
                     init.Stop();
                     times.Add(init.ElapsedMilliseconds);
                     //    Console.WriteLine(init.ElapsedMilliseconds);

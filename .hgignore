@@ -5,3 +5,4 @@ Orc.ReactProcessor.ExampleBundle/node_modules/*
 packages/*
 Orc.ReactProcessor.Runner/obj/*
 Orc.ReactProcessor.Runner/bin/*
+Orc.ReactProcessor.Web/obj/*
