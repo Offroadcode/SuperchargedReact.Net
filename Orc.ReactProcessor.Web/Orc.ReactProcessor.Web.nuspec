@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
-    <version>1.0.0.10</version>
+    <id>orcReactProcessor</id>
+    <version>$version$</version>
     <title>$title$</title>
     <authors>Stephen Roberts; Pete Duncanson</authors>
     <description>React server side renderer</description>
