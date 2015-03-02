@@ -3,8 +3,8 @@
   <metadata>
     <id>orcReactProcessor</id>
     <version>$version$</version>
-    <title>$title$</title>
-    <authors>Stephen Roberts; Pete Duncanson</authors>
+    <title>Offroadcode MVC React Processor</title>
+    <authors>Stephen Roberts, Pete Duncanson</authors>
     <description>React server side renderer</description>
     
     <copyright>Copyright Offroadcode 2015</copyright>
