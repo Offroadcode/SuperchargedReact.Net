@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0"?>
 <package >
   <metadata>
-    <id>orcReactProcessor</id>
+    <id>Orc.ReactProcessor</id>
     <version>$version$</version>
     <title>Offroadcode MVC React Processor</title>
     <authors>Stephen Roberts, Pete Duncanson</authors>
