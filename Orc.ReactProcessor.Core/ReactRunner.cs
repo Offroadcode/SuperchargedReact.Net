@@ -14,6 +14,7 @@ namespace Orc.ReactProcessor.Core
 {
     public class ReactRunner: IDisposable
     {
+        private static List<WeakReference> instances = new List<WeakReference>();
         /// <summary>
         /// In engine key to grab the html
         /// </summary>
@@ -49,7 +50,7 @@ namespace Orc.ReactProcessor.Core
             
             //Initialize the v8 runtime
             Runtime = new V8Runtime();
-
+            
             //Read the scripts text content
             ScriptRaw = File.ReadAllText(JsFile);
 
@@ -101,6 +102,8 @@ namespace Orc.ReactProcessor.Core
             }
         }
 
+        
+
         /// <summary>
         /// Execute the bundle with the given settings
         /// </summary>
@@ -125,6 +128,8 @@ namespace Orc.ReactProcessor.Core
                 stopwatch.Start();
                 using (var engine = Runtime.CreateScriptEngine(engineFlags))
                 {
+                    instances.Add(new WeakReference(engine));
+
                     stopwatch.Stop();
                     measurements.EngineInitializationTime = stopwatch.ElapsedMilliseconds;
 
@@ -221,7 +226,8 @@ namespace Orc.ReactProcessor.Core
                     Cleanup(engine);
                     stopwatch.Stop();
                     measurements.CleanupTime = stopwatch.ElapsedMilliseconds;
-
+                    measurements.InstanceCount = instances.Count(x => x.IsAlive);
+                    
                     return string.Format(
                         "<{2} id=\"{0}\">{1}</{2}>",
                         containerId,
@@ -269,5 +275,6 @@ namespace Orc.ReactProcessor.Core
         public long ScriptsInitializationTime { get; set; }
         public long ComponentGenerationTime { get; set; }
         public long CleanupTime { get; set; }
+        public int InstanceCount { get; set; }
     }
 }
