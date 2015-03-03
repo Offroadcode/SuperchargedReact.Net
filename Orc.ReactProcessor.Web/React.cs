@@ -40,8 +40,8 @@ namespace Orc.ReactProcessor.Web
             string url = ctx.Request.Path;
             
             string inBrowserScript;
-
-            var result = Runner.Execute(containerId, url, props, out inBrowserScript);
+            ReactPerformaceMeasurements measurements;
+            var result = Runner.Execute(containerId, url, props, out inBrowserScript, out measurements);
 
             ctx.Items[ItemsKey] = inBrowserScript;
 

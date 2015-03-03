@@ -35,7 +35,8 @@ namespace Orc.ReactProcessor.Runner
                 Console.WriteLine("Starting:" + i);
                 var testString = "helloWorld" + i;
                 var browserOutput = "";
-                var output = runner.Execute("reactApp", "/tester", new { testString = testString }, out browserOutput);
+                ReactPerformaceMeasurements measurements;
+                var output = runner.Execute("reactApp", "/tester", new { testString = testString }, out browserOutput,out measurements);
                 if (!output.Contains(testString))
                 {
                     throw new Exception("Not Thread Safe.... uh oh!");
@@ -116,7 +117,8 @@ namespace Orc.ReactProcessor.Runner
                     init.Reset();
                     string outputStr = "";
                     init.Start();
-                    runner.Execute("reactApp", "/search/AccommodationOnly", props, out outputStr);
+                    ReactPerformaceMeasurements measurements;
+                    runner.Execute("reactApp", "/search/AccommodationOnly", props, out outputStr, out measurements);
                     init.Stop();
                     times.Add(init.ElapsedMilliseconds);
                     //    Console.WriteLine(init.ElapsedMilliseconds);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -92,34 +93,53 @@ namespace Orc.ReactProcessor.Core
             }
         }
 
-        public string Execute(string containerId, string url, object props, out string inBrowserScript)
+        public string Execute(string containerId, string url, object props, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
-            return Execute(containerId, url, JsonConvert.SerializeObject(props, SerializationSettings), out inBrowserScript);
+            return Execute(containerId, url, JsonConvert.SerializeObject(props, SerializationSettings), out inBrowserScript, out measurements);
         }
 
-        public string Execute(string containerId, string url, string encodedProps, out string inBrowserScript)
+        public string Execute(string containerId, string url, string encodedProps, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
             try
             {
-
+                measurements = new ReactPerformaceMeasurements();
+                var stopwatch = new Stopwatch();
 
                 var engineFlags = V8ScriptEngineFlags.None;
                 if (DisableGlobalMembers)
                 {
                     engineFlags = V8ScriptEngineFlags.DisableGlobalMembers;
                 }
+                stopwatch.Start();
                 using (var engine = Runtime.CreateScriptEngine(engineFlags))
                 {
-
+                    stopwatch.Stop();
+                    measurements.EngineInitializationTime = stopwatch.ElapsedMilliseconds;
                     if (EnableCompilation)
                     {
+                        stopwatch.Restart();
                         engine.Execute(CompiledShimms);
+                        stopwatch.Stop();
+                        measurements.ShimmInitializationTime = stopwatch.ElapsedMilliseconds;
+
+                        stopwatch.Restart();
                         engine.Execute(Compiled);
+                        stopwatch.Stop();
+                        measurements.ScriptsInitializationTime = stopwatch.ElapsedMilliseconds;
+
                     }
                     else
                     {
+                        stopwatch.Restart();
                         engine.Execute(JavascriptShimms.ConsoleShim);
+                        stopwatch.Stop();
+                        measurements.ShimmInitializationTime = stopwatch.ElapsedMilliseconds;
+
+                        stopwatch.Restart();
                         engine.Execute(ScriptRaw);
+                        stopwatch.Stop();
+                        measurements.ScriptsInitializationTime = stopwatch.ElapsedMilliseconds;
+
                     }
 
 
@@ -132,9 +152,9 @@ namespace Orc.ReactProcessor.Core
                             ROUTER_OUTPUT_KEY,
                             encodedProps
                             );
-
+                    stopwatch.Restart();
                     engine.Execute(routerInitCode);
-
+                    
 
 
                     // TODO: Might swap this timeout stuff for an actual Timespan check instead
@@ -148,6 +168,8 @@ namespace Orc.ReactProcessor.Core
                         timeOutCounter++;
                         Thread.Sleep(10); // DIRTY!
                     }
+                    stopwatch.Stop();
+                    measurements.ComponentGenerationTime = stopwatch.ElapsedMilliseconds;
 
                     // Default to a timeout message
                     var html =
@@ -177,7 +199,10 @@ namespace Orc.ReactProcessor.Core
                             );
 
                     inBrowserScript = consoleStatements + inBrowserScript;
+                    stopwatch.Restart();
                     Cleanup(engine);
+                    stopwatch.Stop();
+                    measurements.CleanupTime = stopwatch.ElapsedMilliseconds;
 
                     return string.Format(
                         "<{2} id=\"{0}\">{1}</{2}>",
@@ -216,5 +241,14 @@ namespace Orc.ReactProcessor.Core
                 fileWatcher.Dispose();
             }
         }
+    }
+
+    public class ReactPerformaceMeasurements
+    {
+        public long EngineInitializationTime { get; set; }
+        public long ShimmInitializationTime { get; set; }
+        public long ScriptsInitializationTime { get; set; }
+        public long ComponentGenerationTime { get; set; }
+        public long CleanupTime { get; set; }
     }
 }
