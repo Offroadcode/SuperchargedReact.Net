@@ -6,3 +6,4 @@ packages/*
 Orc.ReactProcessor.Runner/obj/*
 Orc.ReactProcessor.Runner/bin/*
 Orc.ReactProcessor.Web/obj/*
+Orc.ReactProcessor.Web/bin/*
