@@ -254,7 +254,7 @@ namespace Orc.ReactProcessor.Core
             }
             
             engine.Execute(cleanup.ToString());
-         //   engine.CollectGarbage(true);
+            engine.CollectGarbage(true);
         }
         public void Dispose()
         {
