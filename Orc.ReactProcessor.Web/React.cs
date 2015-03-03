@@ -34,6 +34,7 @@ namespace Orc.ReactProcessor.Web
         }
 
         private const string ItemsKey = "Orc.ReactProcessor.Scripts";
+        private const string PerformanceKey = "Orc.ReactProcessor.Performance";
         public static MvcHtmlString Render(this HtmlHelper helper, string containerId, object props)
         {
             var ctx = HttpContext.Current;
@@ -44,7 +45,7 @@ namespace Orc.ReactProcessor.Web
             var result = Runner.Execute(containerId, url, props, out inBrowserScript, out measurements);
 
             ctx.Items[ItemsKey] = inBrowserScript;
-
+            ctx.Items[PerformanceKey] = measurements;
             return new MvcHtmlString(result);
 
         }
@@ -62,6 +63,17 @@ namespace Orc.ReactProcessor.Web
             }
 
             return new MvcHtmlString("");
+        }
+        public static ReactPerformaceMeasurements GetLastReactPerformance(this HtmlHelper helper)
+        {
+            var ctx = HttpContext.Current;
+            if (ctx.Items.Contains(PerformanceKey))
+            {
+                var str = ctx.Items[PerformanceKey] as ReactPerformaceMeasurements;
+                return str;
+            }
+
+            return null;
         }
     }
 }
