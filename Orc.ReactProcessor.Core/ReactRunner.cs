@@ -14,12 +14,31 @@ namespace Orc.ReactProcessor.Core
 {
     public class ReactRunner: IDisposable
     {
-
+        /// <summary>
+        /// In engine key to grab the html
+        /// </summary>
         protected const string ROUTER_OUTPUT_KEY = "_ReactNET_RouterOutput_Html";
+
+        /// <summary>
+        /// Client side scripts variable where it dumps the data
+        /// </summary>
         protected const string IN_BROWSER_DATA_KEY = "_ReactNET_InitialData_JSON";
+
+        string JsFile { get; set; }
+        bool EnableFileWatcher { get; set; }
+        bool EnableCompilation { get; set; }
+        bool DisableGlobalMembers { get; set; }
+        JsonSerializerSettings SerializationSettings { get; set; }
+        V8Runtime Runtime { get; set; }
+
+        V8Script CompiledShimms { get; set; }
+        V8Script Compiled { get; set; }
+        string ScriptRaw { get; set; }
+        FileSystemWatcher fileWatcher;
 
         public ReactRunner(string file, bool enableFileWatcher, bool enableCompilation, bool disableGlobalMembers, JsonSerializerSettings serializationSettings)
         {
+            //setup assembly resolver so it can find the v8 dlls
             AssemblyResolver.Initialize();
 
             JsFile = file;
@@ -27,12 +46,16 @@ namespace Orc.ReactProcessor.Core
             EnableCompilation = enableCompilation;
             DisableGlobalMembers = disableGlobalMembers;
             SerializationSettings = serializationSettings;
+            
+            //Initialize the v8 runtime
             Runtime = new V8Runtime();
 
+            //Read the scripts text content
             ScriptRaw = File.ReadAllText(JsFile);
 
             if (EnableCompilation)
             {
+                //If compilation is enabled, we compile the scripts
                 Compiled = Runtime.Compile(ScriptRaw);
                 CompiledShimms = Runtime.Compile(JavascriptShimms.ConsoleShim);
 
@@ -47,21 +70,7 @@ namespace Orc.ReactProcessor.Core
                 fileWatcher.Changed += fileWatcher_Changed;
                 fileWatcher.EnableRaisingEvents = true;
             }
-
         }
-
-
-        string JsFile { get; set; }
-        bool EnableFileWatcher { get; set; }
-        bool EnableCompilation { get; set; }
-        bool DisableGlobalMembers { get; set; }
-        JsonSerializerSettings SerializationSettings { get; set; }
-        V8Runtime Runtime { get; set; }
-
-        V8Script CompiledShimms { get; set; }
-        V8Script Compiled { get; set; }
-        string ScriptRaw { get; set; }
-        FileSystemWatcher fileWatcher;
 
         void fileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
@@ -85,14 +94,16 @@ namespace Orc.ReactProcessor.Core
                     Thread.Sleep(500);
                 }
             }
-
-
+            
             if (didRead && EnableCompilation)
             {
                 Compiled = Runtime.Compile(ScriptRaw);
             }
         }
 
+        /// <summary>
+        /// Execute the bundle with the given settings
+        /// </summary>
         public string Execute(string containerId, string url, object props, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
             return Execute(containerId, url, JsonConvert.SerializeObject(props, SerializationSettings), out inBrowserScript, out measurements);
@@ -110,11 +121,14 @@ namespace Orc.ReactProcessor.Core
                 {
                     engineFlags = V8ScriptEngineFlags.DisableGlobalMembers;
                 }
+
                 stopwatch.Start();
                 using (var engine = Runtime.CreateScriptEngine(engineFlags))
                 {
                     stopwatch.Stop();
                     measurements.EngineInitializationTime = stopwatch.ElapsedMilliseconds;
+
+                    //Firstly we'll add the libraries to the engine!
                     if (EnableCompilation)
                     {
                         stopwatch.Restart();
@@ -142,6 +156,7 @@ namespace Orc.ReactProcessor.Core
 
                     }
 
+                    //we generate the code to execute in the engine here
 
                     var routerInitCode =
                         String.Format(
@@ -154,8 +169,6 @@ namespace Orc.ReactProcessor.Core
                             );
                     stopwatch.Restart();
                     engine.Execute(routerInitCode);
-                    
-
 
                     // TODO: Might swap this timeout stuff for an actual Timespan check instead
                     var timeOutCounter = 0;
@@ -179,8 +192,11 @@ namespace Orc.ReactProcessor.Core
                     {
                         html = engine.GetVariableValue<string>(ROUTER_OUTPUT_KEY);
                     }
+
+                    //get the console statements out of the engine
                     var consoleStatements = engine.Evaluate<string>("console.getCalls()");
 
+                    //generate the scripts to render in the browser
                     inBrowserScript =
                         String.Format(
                             @"
@@ -199,6 +215,8 @@ namespace Orc.ReactProcessor.Core
                             );
 
                     inBrowserScript = consoleStatements + inBrowserScript;
+                    
+                    //Cleanup the engine
                     stopwatch.Restart();
                     Cleanup(engine);
                     stopwatch.Stop();
@@ -217,6 +235,7 @@ namespace Orc.ReactProcessor.Core
                 throw new Exception(e.ErrorDetails);
             }
         }
+
         private static void Cleanup(V8ScriptEngine engine)
         {
             var data = engine.Script as DynamicObject;
