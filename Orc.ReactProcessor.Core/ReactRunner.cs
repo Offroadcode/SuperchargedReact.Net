@@ -14,7 +14,7 @@ namespace Orc.ReactProcessor.Core
 {
     public class ReactRunner: IDisposable
     {
-        private static List<WeakReference> instances = new List<WeakReference>();
+        
         /// <summary>
         /// In engine key to grab the html
         /// </summary>
@@ -128,8 +128,7 @@ namespace Orc.ReactProcessor.Core
                 stopwatch.Start();
                 using (var engine = Runtime.CreateScriptEngine(engineFlags))
                 {
-                    instances.Add(new WeakReference(engine));
-
+                    
                     stopwatch.Stop();
                     measurements.EngineInitializationTime = stopwatch.ElapsedMilliseconds;
 
@@ -226,7 +225,6 @@ namespace Orc.ReactProcessor.Core
                     Cleanup(engine);
                     stopwatch.Stop();
                     measurements.CleanupTime = stopwatch.ElapsedMilliseconds;
-                    measurements.InstanceCount = instances.Count(x => x.IsAlive);
                     
                     return string.Format(
                         "<{2} id=\"{0}\">{1}</{2}>",
