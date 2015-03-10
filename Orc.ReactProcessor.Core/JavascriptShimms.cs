@@ -21,7 +21,11 @@ namespace Orc.ReactProcessor.Core
 	            _handleCall: function(methodName/*, ...args*/) {
 		            var serializedArgs = [];
 		            for (var i = 1; i < arguments.length; i++) {
-			            serializedArgs.push(JSON.stringify(arguments[i]));
+		            	try {
+			        	    serializedArgs.push(JSON.stringify(arguments[i]));
+			        	} catch(err){
+			        		 serializedArgs.push('ServerSideError:'+err);
+			        	}
 		            }
 		            this._calls.push({
 			            method: methodName,
