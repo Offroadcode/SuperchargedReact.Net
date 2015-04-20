@@ -1,0 +1,7 @@
+Orc.ReactProcessor.Core/obj/
+packages/
+Orc.ReactProcessor.Web/obj/
+Orc.ReactProcessor.Web/
+Orc.ReactProcessor.Core/bin/
+Orc.ReactProcessor.Runner/bin/
+Orc.ReactProcessor.Runner/obj/
