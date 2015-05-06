@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssembleyResolver.cs" />
+    <Compile Include="IRenderSettings.cs" />
     <Compile Include="JavascriptShimms.cs" />
     <Compile Include="ReactRunner.cs" />
     <Compile Include="EngineHelpers.cs" />

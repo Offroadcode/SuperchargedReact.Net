@@ -9,6 +9,8 @@ namespace Orc.SuperchargedReact.Web
     {
         private static ReactRunner _runner = null;
         private static object lockObj = new object();
+        private const string ItemsKey = "Orc.SuperchargedReact.Scripts";
+        private const string PerformanceKey = "Orc.SuperchargedReact.Performance";
 
         public static ReactRunner Runner
         {
@@ -33,8 +35,6 @@ namespace Orc.SuperchargedReact.Web
             }
         }
 
-        private const string ItemsKey = "Orc.SuperchargedReact.Scripts";
-        private const string PerformanceKey = "Orc.SuperchargedReact.Performance";
         public static MvcHtmlString Render(this HtmlHelper helper, string containerId, object props)
         {
             var ctx = HttpContext.Current;

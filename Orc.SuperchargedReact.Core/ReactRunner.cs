@@ -37,6 +37,14 @@ namespace Orc.SuperchargedReact.Core
         string ScriptRaw { get; set; }
         FileSystemWatcher fileWatcher;
 
+        /// <summary>
+        /// Creates
+        /// </summary>
+        /// <param name="file">The relative path to your bundle file of js, we only expect your code to be in one file or for it to use requires that this file will handle for us</param>
+        /// <param name="enableFileWatcher">If in dev mode good to have the file watcher on, infact just good to have on all the time</param>
+        /// <param name="enableCompilation">Highly recommended, caches the parsed code after the first run so skips parsing time, much faster</param>
+        /// <param name="disableGlobalMembers">Tells V8 that it won't be able to have a 2 way chat with .net, disabling this makes for quite a speed increase</param>
+        /// <param name="serializationSettings"></param>
         public ReactRunner(string file, bool enableFileWatcher, bool enableCompilation, bool disableGlobalMembers, JsonSerializerSettings serializationSettings)
         {
             //setup assembly resolver so it can find the v8 dlls
@@ -105,12 +113,19 @@ namespace Orc.SuperchargedReact.Core
         
 
         /// <summary>
-        /// Execute the bundle with the given settings
+        /// Excutes the passed in script
         /// </summary>
+        /// <param name="containerId"></param>
+        /// <param name="url"></param>
+        /// <param name="props"></param>
+        /// <param name="inBrowserScript"></param>
+        /// <param name="measurements"></param>
+        /// <returns></returns>
         public string Execute(string containerId, string url, object props, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
             return Execute(containerId, url, JsonConvert.SerializeObject(props, SerializationSettings), out inBrowserScript, out measurements);
         }
+
 
         public string Execute(string containerId, string url, string encodedProps, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
@@ -161,6 +176,18 @@ namespace Orc.SuperchargedReact.Core
                     }
 
                     //we generate the code to execute in the engine here
+                    /*
+                    settings = {
+	                    requestdUrl : "string",		// Needed by ReactRouter to know which route to render
+	                    routes : {},				// Your ReactRouter routes that you should pass in when you called Html.Render assuming you are using ReactRouter, if not then ignore
+	                    form : {},					// The forms collection as a dictionary
+	                    querystring : {},			// The querystring as a dictionary
+	                    routerOutputVar : "string",	// The name of the variable to store the ReactRouter output into, used only in your server-side rendering code and only if you are using ReactRouter
+	                    props : {},					// Any props object passed in, this will be the Model you passed in when calling Html.Render in your template
+	                    componentName: "string",	// Name of the component to render if not using ReactRouter
+	                    containerId: "string"		// The name of the HTML element to inject your components output into, only used client-side
+                    }
+                     * */
 
                     var routerInitCode =
                         String.Format(
