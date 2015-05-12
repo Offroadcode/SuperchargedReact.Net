@@ -16,7 +16,7 @@ namespace Orc.SuperchargedReact.Web
         {
             get
             {
-                if (_runner == null)
+              /*  if (_runner == null)
                 {
                     lock (lockObj)
                     {
@@ -27,11 +27,19 @@ namespace Orc.SuperchargedReact.Web
                                 ReactConfiguration.Current.EnableFileWatcher, 
                                 ReactConfiguration.Current.EnableCompilation,
                                 ReactConfiguration.Current.DisableGlobalMembers,
+                                ReactConfiguration.Current.BootStrapperCommand,
                                 ReactConfiguration.Current.SerializerSettings);
                         }
                     }
                 }
-                return _runner;
+                return _runner;*/
+                return new ReactRunner(
+                              HttpContext.Current.Server.MapPath(ReactConfiguration.Current.FilePath),
+                              ReactConfiguration.Current.EnableFileWatcher,
+                              ReactConfiguration.Current.EnableCompilation,
+                              ReactConfiguration.Current.DisableGlobalMembers,
+                              ReactConfiguration.Current.BootStrapperCommand,
+                              ReactConfiguration.Current.SerializerSettings);
             }
         }
 
@@ -42,7 +50,9 @@ namespace Orc.SuperchargedReact.Web
             
             string inBrowserScript;
             ReactPerformaceMeasurements measurements;
-            var result = Runner.Execute(containerId, url, props, out inBrowserScript, out measurements);
+
+            var settings = new RenderSettings(containerId, props, url);
+            var result = Runner.Execute( settings, out inBrowserScript, out measurements);
 
             ctx.Items[ItemsKey] = inBrowserScript;
             ctx.Items[PerformanceKey] = measurements;

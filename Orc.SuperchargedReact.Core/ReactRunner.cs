@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
@@ -36,6 +37,7 @@ namespace Orc.SuperchargedReact.Core
         V8Script Compiled { get; set; }
         string ScriptRaw { get; set; }
         FileSystemWatcher fileWatcher;
+        string BootstrapCommand { get; set; }
 
         /// <summary>
         /// Creates
@@ -44,8 +46,9 @@ namespace Orc.SuperchargedReact.Core
         /// <param name="enableFileWatcher">If in dev mode good to have the file watcher on, infact just good to have on all the time</param>
         /// <param name="enableCompilation">Highly recommended, caches the parsed code after the first run so skips parsing time, much faster</param>
         /// <param name="disableGlobalMembers">Tells V8 that it won't be able to have a 2 way chat with .net, disabling this makes for quite a speed increase</param>
+        /// <param name="bootstrapCommand">The javascript command to run to kick things off</param>
         /// <param name="serializationSettings"></param>
-        public ReactRunner(string file, bool enableFileWatcher, bool enableCompilation, bool disableGlobalMembers, JsonSerializerSettings serializationSettings)
+        public ReactRunner(string file, bool enableFileWatcher, bool enableCompilation, bool disableGlobalMembers, string bootstrapCommand, JsonSerializerSettings serializationSettings )
         {
             //setup assembly resolver so it can find the v8 dlls
             AssemblyResolver.Initialize();
@@ -55,6 +58,7 @@ namespace Orc.SuperchargedReact.Core
             EnableCompilation = enableCompilation;
             DisableGlobalMembers = disableGlobalMembers;
             SerializationSettings = serializationSettings;
+            BootstrapCommand = bootstrapCommand;
             
             //Initialize the v8 runtime
             Runtime = new V8Runtime();
@@ -65,9 +69,8 @@ namespace Orc.SuperchargedReact.Core
             if (EnableCompilation)
             {
                 //If compilation is enabled, we compile the scripts
-                Compiled = Runtime.Compile(ScriptRaw);
                 CompiledShimms = Runtime.Compile(JavascriptShimms.ConsoleShim);
-
+                Compiled = Runtime.Compile(ScriptRaw);
             }
 
             if (EnableFileWatcher)
@@ -121,16 +124,15 @@ namespace Orc.SuperchargedReact.Core
         /// <param name="inBrowserScript"></param>
         /// <param name="measurements"></param>
         /// <returns></returns>
-        public string Execute(string containerId, string url, object props, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
+        public string Execute( IRenderSettings settings, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
-            return Execute(containerId, url, JsonConvert.SerializeObject(props, SerializationSettings), out inBrowserScript, out measurements);
-        }
+            settings.RouterOutputVarName = ROUTER_OUTPUT_KEY;
+            //settings.RoutesInputVarName = I
 
+            var bootstrapper = BootstrapCommand + "(" + JsonConvert.SerializeObject(settings, SerializationSettings) + ");";
 
-        public string Execute(string containerId, string url, string encodedProps, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
-        {
-            try
-            {
+          /*  try
+            {*/
                 measurements = new ReactPerformaceMeasurements();
                 var stopwatch = new Stopwatch();
 
@@ -143,7 +145,6 @@ namespace Orc.SuperchargedReact.Core
                 stopwatch.Start();
                 using (var engine = Runtime.CreateScriptEngine(engineFlags))
                 {
-                    
                     stopwatch.Stop();
                     measurements.EngineInitializationTime = stopwatch.ElapsedMilliseconds;
 
@@ -159,7 +160,6 @@ namespace Orc.SuperchargedReact.Core
                         engine.Execute(Compiled);
                         stopwatch.Stop();
                         measurements.ScriptsInitializationTime = stopwatch.ElapsedMilliseconds;
-
                     }
                     else
                     {
@@ -167,29 +167,18 @@ namespace Orc.SuperchargedReact.Core
                         engine.Execute(JavascriptShimms.ConsoleShim);
                         stopwatch.Stop();
                         measurements.ShimmInitializationTime = stopwatch.ElapsedMilliseconds;
-
+                        
                         stopwatch.Restart();
                         engine.Execute(ScriptRaw);
                         stopwatch.Stop();
                         measurements.ScriptsInitializationTime = stopwatch.ElapsedMilliseconds;
-
                     }
 
-                    //we generate the code to execute in the engine here
-                    /*
-                    settings = {
-	                    requestdUrl : "string",		// Needed by ReactRouter to know which route to render
-	                    routes : {},				// Your ReactRouter routes that you should pass in when you called Html.Render assuming you are using ReactRouter, if not then ignore
-	                    form : {},					// The forms collection as a dictionary
-	                    querystring : {},			// The querystring as a dictionary
-	                    routerOutputVar : "string",	// The name of the variable to store the ReactRouter output into, used only in your server-side rendering code and only if you are using ReactRouter
-	                    props : {},					// Any props object passed in, this will be the Model you passed in when calling Html.Render in your template
-	                    componentName: "string",	// Name of the component to render if not using ReactRouter
-	                    containerId: "string"		// The name of the HTML element to inject your components output into, only used client-side
-                    }
-                     * */
+                    // Kick off the render
+                    stopwatch.Restart();
+                    engine.Execute( bootstrapper );
 
-                    var routerInitCode =
+/*                    var routerInitCode =
                         String.Format(
                             @"Router.run( reactRoutesConfig, '{0}', function( Handler ) {{ 
                         {1} = React.renderToString(React.createElement(Handler, {2} ));
@@ -200,13 +189,12 @@ namespace Orc.SuperchargedReact.Core
                             );
                     stopwatch.Restart();
                     engine.Execute(routerInitCode);
-
+*/
                     // TODO: Might swap this timeout stuff for an actual Timespan check instead
                     var timeOutCounter = 0;
                     var maxCyclesBeforeTimeout = 10; // TODO: Config this
 
                     // Poll the engine to see if the router callback has fired
-
                     while (!engine.HasVariable(ROUTER_OUTPUT_KEY) && timeOutCounter <= maxCyclesBeforeTimeout)
                     {
                         timeOutCounter++;
@@ -228,6 +216,7 @@ namespace Orc.SuperchargedReact.Core
                     var consoleStatements = engine.Evaluate<string>("console.getCalls()");
 
                     //generate the scripts to render in the browser
+                    /*
                     inBrowserScript =
                         String.Format(
                             @"
@@ -244,8 +233,8 @@ namespace Orc.SuperchargedReact.Core
                             encodedProps,
                             containerId
                             );
-
-                    inBrowserScript = consoleStatements + inBrowserScript;
+                    */
+                    inBrowserScript = consoleStatements + ";" + bootstrapper;
                     
                     //Cleanup the engine
                     stopwatch.Restart();
@@ -255,16 +244,16 @@ namespace Orc.SuperchargedReact.Core
                     
                     return string.Format(
                         "<{2} id=\"{0}\">{1}</{2}>",
-                        containerId,
+                        settings.ContainerId,
                         html,
                         "div"
                         );
                 }
-            }
+           /* }
             catch (Microsoft.ClearScript.ScriptEngineException e)
             {
                 throw new Exception(e.ErrorDetails);
-            }
+            }*/
         }
 
         private static void Cleanup(V8ScriptEngine engine)
