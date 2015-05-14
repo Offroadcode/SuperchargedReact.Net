@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace Orc.SuperchargedReact.Web
 {
@@ -10,7 +13,12 @@ namespace Orc.SuperchargedReact.Web
             EnableCompilation = true;
             EnableFileWatcher = true;
             DisableGlobalMembers = true;
-            SerializerSettings = new JsonSerializerSettings();
+            SerializerSettings = new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = new List<JsonConverter> {new StringEnumConverter()},
+                Formatting = Formatting.Indented
+            };
             JSGlobalVar = "global";
             JSGlobalNamespace = "SuperChargedReact";
             BootStrapMethodName = "bootstrapper";

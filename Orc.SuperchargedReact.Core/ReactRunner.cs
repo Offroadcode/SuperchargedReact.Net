@@ -19,7 +19,7 @@ namespace Orc.SuperchargedReact.Core
         /// <summary>
         /// In engine key to grab the html
         /// </summary>
-        protected const string ROUTER_OUTPUT_KEY = "_ReactNET_RouterOutput_Html";
+        protected const string ROUTER_OUTPUT_KEY = "SuperChargedReact.renderOutput";
 
         /// <summary>
         /// Client side scripts variable where it dumps the data
@@ -126,13 +126,10 @@ namespace Orc.SuperchargedReact.Core
         /// <returns></returns>
         public string Execute( IRenderSettings settings, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
-            settings.RouterOutputVarName = ROUTER_OUTPUT_KEY;
-            //settings.RoutesInputVarName = I
-
             var bootstrapper = BootstrapCommand + "(" + JsonConvert.SerializeObject(settings, SerializationSettings) + ");";
 
-          /*  try
-            {*/
+            try
+            {
                 measurements = new ReactPerformaceMeasurements();
                 var stopwatch = new Stopwatch();
 
@@ -195,7 +192,15 @@ namespace Orc.SuperchargedReact.Core
                     var maxCyclesBeforeTimeout = 10; // TODO: Config this
 
                     // Poll the engine to see if the router callback has fired
-                    while (!engine.HasVariable(ROUTER_OUTPUT_KEY) && timeOutCounter <= maxCyclesBeforeTimeout)
+                    while (
+                        (
+                            !engine.HasVariable(ROUTER_OUTPUT_KEY) 
+                            || 
+                            string.IsNullOrEmpty(engine.GetVariableValue<string>(ROUTER_OUTPUT_KEY) ) 
+                        )
+                        && 
+                        timeOutCounter <= maxCyclesBeforeTimeout
+                        )
                     {
                         timeOutCounter++;
                         Thread.Sleep(10); // DIRTY!
@@ -209,7 +214,7 @@ namespace Orc.SuperchargedReact.Core
 
                     if (timeOutCounter <= maxCyclesBeforeTimeout)
                     {
-                        html = engine.GetVariableValue<string>(ROUTER_OUTPUT_KEY);
+                        html = engine.ExecuteCommand(ROUTER_OUTPUT_KEY);// engine.GetVariableValue<string>();
                     }
 
                     //get the console statements out of the engine
@@ -249,11 +254,11 @@ namespace Orc.SuperchargedReact.Core
                         "div"
                         );
                 }
-           /* }
+            }
             catch (Microsoft.ClearScript.ScriptEngineException e)
             {
                 throw new Exception(e.ErrorDetails);
-            }*/
+            }
         }
 
         private static void Cleanup(V8ScriptEngine engine)
