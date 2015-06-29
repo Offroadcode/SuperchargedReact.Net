@@ -8,7 +8,7 @@ These tweaks can be freely found on the ClearScript forums but it can be diffcul
 
 This implementation of React for .net doesnt pool engines. With the performance we've seen in our testing we have not seen a need to use pooling as yet. You needs may differ so please do your own testing but do not start with the assumption that pooling is a must have, test it on real need first. 
 
-## V8 optimisations utalised
+## V8 optimisations utilized
 
 * Single Instance of V8 used to spawn a new context per request - fastest way to get a new context
 * Re-uses Compiled scripts which skips the compilation of your js code for each request
