@@ -24,7 +24,7 @@ This implementation of React for .net doesnt pool engines. With the performance 
 * Assumes you are bundling React and/or ReactRouter into your code so you can always run the latest versions
 * Happy to run with one bundle that you control, no recompiles required to include addiitonal files
 
- 
+ For an indepth no-holds barred look into how to use this with Umbraco (super useful for any .net projec though) check out this read: http://skrift.io/articles/archive/getting-supercharged-with-react/
 
 
 
