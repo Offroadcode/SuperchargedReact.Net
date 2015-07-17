@@ -164,7 +164,7 @@ namespace Orc.SuperchargedReact.Core
 
                     var routerInitCode =
                         String.Format(
-                            @"Router.run( reactRoutesConfig, '{0}', function( Handler ) {{ 
+                            @"Router.run( SuperChargedReact.routes, '{0}', function( Handler ) {{ 
                         {1} = React.renderToString(React.createElement(Handler, {2} ));
                     }});",
                             url,
@@ -206,7 +206,7 @@ namespace Orc.SuperchargedReact.Core
                             @"
                             var {0} = {1};
 
-                            Router.run( reactRoutesConfig, Router.HistoryLocation, function( Handler ) {{ 
+                            Router.run( SuperChargedReact.routes, Router.HistoryLocation, function( Handler ) {{ 
                                 React.render(
                                     React.createElement(Handler, {0} ), 
                                     document.getElementById( '{2}' )
