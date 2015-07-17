@@ -7,14 +7,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orc.SuperchargedReact.Core"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orc.SuperchargedReact.Runner", "Orc.SuperchargedReact.Runner\Orc.SuperchargedReact.Runner.csproj", "{70897BE8-BA62-4EDC-AA08-4389E0881542}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orc.SuperchargedReact.Web", "Orc.SuperchargedReact.Web\Orc.SuperchargedReact.Web.csproj", "{61A80F90-9780-4658-AEA0-D60E9F6BE418}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{B9D06680-7A92-43FA-925F-20C3DF3AAB5A}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orc.SuperchargedReact.Web", "Orc.SuperchargedReact.Web\Orc.SuperchargedReact.Web.csproj", "{D15C5AA1-7E3C-4DB6-B951-6D137E832F63}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,10 +30,10 @@ Global
 		{70897BE8-BA62-4EDC-AA08-4389E0881542}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70897BE8-BA62-4EDC-AA08-4389E0881542}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70897BE8-BA62-4EDC-AA08-4389E0881542}.Release|Any CPU.Build.0 = Release|Any CPU
-		{61A80F90-9780-4658-AEA0-D60E9F6BE418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{61A80F90-9780-4658-AEA0-D60E9F6BE418}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{61A80F90-9780-4658-AEA0-D60E9F6BE418}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{61A80F90-9780-4658-AEA0-D60E9F6BE418}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D15C5AA1-7E3C-4DB6-B951-6D137E832F63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D15C5AA1-7E3C-4DB6-B951-6D137E832F63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D15C5AA1-7E3C-4DB6-B951-6D137E832F63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D15C5AA1-7E3C-4DB6-B951-6D137E832F63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
