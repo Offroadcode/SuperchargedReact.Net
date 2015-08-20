@@ -12,11 +12,14 @@ namespace Orc.SuperchargedReact.Web
         private const string ItemsKey = "Orc.SuperchargedReact.Scripts";
         private const string PerformanceKey = "Orc.SuperchargedReact.Performance";
 
+        /// <summary>
+        /// Our lazy loaded React Runner, this manages all the V8 goodies for us. Reuse this for maximum performance
+        /// </summary>
         public static ReactRunner Runner
         {
             get
             {
-              /*  if (_runner == null)
+                if (_runner == null)
                 {
                     lock (lockObj)
                     {
@@ -32,7 +35,8 @@ namespace Orc.SuperchargedReact.Web
                         }
                     }
                 }
-                return _runner;*/
+                return _runner;
+                /*
                 return new ReactRunner(
                               HttpContext.Current.Server.MapPath(ReactConfiguration.Current.FilePath),
                               ReactConfiguration.Current.EnableFileWatcher,
@@ -40,6 +44,7 @@ namespace Orc.SuperchargedReact.Web
                               ReactConfiguration.Current.DisableGlobalMembers,
                               ReactConfiguration.Current.BootStrapperCommand,
                               ReactConfiguration.Current.SerializerSettings);
+                 */ 
             }
         }
 

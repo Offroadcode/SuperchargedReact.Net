@@ -40,7 +40,7 @@ namespace Orc.SuperchargedReact.Core
         string BootstrapCommand { get; set; }
 
         /// <summary>
-        /// Creates
+        /// Creates a Runner that manages all the V8 goodies for us. Ideally should should only have one of these and reuse it but as you my want multiple we've not enforced that logic here. Lazy load it then reuse the same instance to get maximum speed benefits for rendering
         /// </summary>
         /// <param name="file">The relative path to your bundle file of js, we only expect your code to be in one file or for it to use requires that this file will handle for us</param>
         /// <param name="enableFileWatcher">If in dev mode good to have the file watcher on, infact just good to have on all the time</param>
@@ -178,18 +178,6 @@ namespace Orc.SuperchargedReact.Core
                     stopwatch.Restart();
                     engine.Execute( bootstrapper );
 
-/*                    var routerInitCode =
-                        String.Format(
-                            @"Router.run( reactRoutesConfig, '{0}', function( Handler ) {{ 
-                        {1} = React.renderToString(React.createElement(Handler, {2} ));
-                    }});",
-                            url,
-                            ROUTER_OUTPUT_KEY,
-                            encodedProps
-                            );
-                    stopwatch.Restart();
-                    engine.Execute(routerInitCode);
-*/
                     // TODO: Might swap this timeout stuff for an actual Timespan check instead
                     var timeOutCounter = 0;
                     var maxCyclesBeforeTimeout = 10; // TODO: Config this
@@ -198,7 +186,7 @@ namespace Orc.SuperchargedReact.Core
                     while (!engine.HasVariable(ROUTER_OUTPUT_KEY) && timeOutCounter <= maxCyclesBeforeTimeout)
                     {
                         timeOutCounter++;
-                        Thread.Sleep(10); // DIRTY!
+                        Thread.Sleep(10); // DIRTY! See here of reasoning https://github.com/Offroadcode/SuperchargedReact.Net/issues/1#issuecomment-118848133
                     }
                     stopwatch.Stop();
                     measurements.ComponentGenerationTime = stopwatch.ElapsedMilliseconds;
@@ -215,25 +203,6 @@ namespace Orc.SuperchargedReact.Core
                     //get the console statements out of the engine
                     var consoleStatements = engine.Evaluate<string>("console.getCalls()");
 
-                    //generate the scripts to render in the browser
-                    /*
-                    inBrowserScript =
-                        String.Format(
-                            @"
-                            var {0} = {1};
-
-                            Router.run( reactRoutesConfig, Router.HistoryLocation, function( Handler ) {{ 
-                                React.render(
-                                    React.createElement(Handler, {0} ), 
-                                    document.getElementById( '{2}' )
-                                );
-                            }});",
-                            
-                            IN_BROWSER_DATA_KEY,
-                            encodedProps,
-                            containerId
-                            );
-                    */
                     inBrowserScript = consoleStatements + ";" + bootstrapper;
                     
                     //Cleanup the engine
