@@ -72,6 +72,11 @@ namespace Orc.SuperchargedReact.Web
         public static MvcHtmlString Render(this HtmlHelper helper, string componentToRender, string containerId,
             object props)
         {
+            if (String.IsNullOrEmpty(containerId))
+            {
+                containerId = Guid.NewGuid().ToString();
+            }
+
             var ctx = HttpContext.Current;
             string url = ctx.Request.Path;
 
