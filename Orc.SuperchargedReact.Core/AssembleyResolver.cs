@@ -27,15 +27,20 @@ namespace Orc.SuperchargedReact.Core
         /// <summary>
         /// Regular expression for working with the `bin` directory path
         /// </summary>
-        private static readonly Regex _binDirectoryRegex = new Regex(@"\\bin\\?$", RegexOptions.IgnoreCase);
+        private static readonly Regex BinDirectoryRegex = new Regex(@"\\bin\\?$", RegexOptions.IgnoreCase);
 
+        private static bool _isLoaded = false;
 
         /// <summary>
         /// Initialize a assembly resolver
         /// </summary>
         public static void Initialize()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolveHandler;
+            if (!_isLoaded)
+            {
+                AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolveHandler;
+                _isLoaded = true;
+            }
         }
 
         private static Assembly AssemblyResolveHandler(object sender, ResolveEventArgs args)
@@ -59,9 +64,9 @@ namespace Orc.SuperchargedReact.Core
 
                 if (!Directory.Exists(assemblyDirectoryPath))
                 {
-                    if (_binDirectoryRegex.IsMatch(binDirectoryPath))
+                    if (BinDirectoryRegex.IsMatch(binDirectoryPath))
                     {
-                        string applicationRootPath = _binDirectoryRegex.Replace(binDirectoryPath, string.Empty);
+                        string applicationRootPath = BinDirectoryRegex.Replace(binDirectoryPath, string.Empty);
                         assemblyDirectoryPath = Path.Combine(applicationRootPath, ASSEMBLY_DIRECTORY_NAME);
 
                         if (!Directory.Exists(assemblyDirectoryPath))
