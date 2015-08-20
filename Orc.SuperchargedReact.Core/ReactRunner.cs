@@ -19,7 +19,7 @@ namespace Orc.SuperchargedReact.Core
         /// <summary>
         /// In engine key to grab the html
         /// </summary>
-        protected const string ROUTER_OUTPUT_KEY = "_ReactNET_RouterOutput_Html";
+        protected const string ROUTER_OUTPUT_KEY = "SuperChargedReact.renderOutput";
 
         /// <summary>
         /// Client side scripts variable where it dumps the data
@@ -126,13 +126,10 @@ namespace Orc.SuperchargedReact.Core
         /// <returns></returns>
         public string Execute( IRenderSettings settings, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
-            settings.RouterOutputVarName = ROUTER_OUTPUT_KEY;
-            //settings.RoutesInputVarName = I
-
             var bootstrapper = BootstrapCommand + "(" + JsonConvert.SerializeObject(settings, SerializationSettings) + ");";
 
-          /*  try
-            {*/
+            try
+            {
                 measurements = new ReactPerformaceMeasurements();
                 var stopwatch = new Stopwatch();
 
@@ -151,6 +148,7 @@ namespace Orc.SuperchargedReact.Core
                     //Firstly we'll add the libraries to the engine!
                     if (EnableCompilation)
                     {
+                        // Use the pre-compiled ones for speed
                         stopwatch.Restart();
                         engine.Execute(CompiledShimms);
                         stopwatch.Stop();
@@ -163,6 +161,7 @@ namespace Orc.SuperchargedReact.Core
                     }
                     else
                     {
+                        // Use the raw uncompiled ones, these will be parsed a fresh each time by the JS engine
                         stopwatch.Restart();
                         engine.Execute(JavascriptShimms.ConsoleShim);
                         stopwatch.Stop();
@@ -183,11 +182,23 @@ namespace Orc.SuperchargedReact.Core
                     var maxCyclesBeforeTimeout = 10; // TODO: Config this
 
                     // Poll the engine to see if the router callback has fired
-                    while (!engine.HasVariable(ROUTER_OUTPUT_KEY) && timeOutCounter <= maxCyclesBeforeTimeout)
+                    while (
+                        (
+                            !engine.HasVariable(ROUTER_OUTPUT_KEY) 
+                            || 
+                            string.IsNullOrEmpty(engine.GetVariableValue<string>(ROUTER_OUTPUT_KEY) ) 
+                        )
+                        && 
+                        timeOutCounter <= maxCyclesBeforeTimeout
+                        )
                     {
                         timeOutCounter++;
                         Thread.Sleep(10); // DIRTY! See here of reasoning https://github.com/Offroadcode/SuperchargedReact.Net/issues/1#issuecomment-118848133
+					  // But it works, need to bench mark if this is quicker than linking the JS engine to the .net context as then we could 
+					  // ping the value straight out form within JS. Alternatively we could get away with just reducing this sleep time but 
+					  // it depends on how much code we have running, machine speed etc. Its "fast enough" for now though.
                     }
+
                     stopwatch.Stop();
                     measurements.ComponentGenerationTime = stopwatch.ElapsedMilliseconds;
 
@@ -197,7 +208,7 @@ namespace Orc.SuperchargedReact.Core
 
                     if (timeOutCounter <= maxCyclesBeforeTimeout)
                     {
-                        html = engine.GetVariableValue<string>(ROUTER_OUTPUT_KEY);
+                        html = engine.ExecuteCommand(ROUTER_OUTPUT_KEY);// engine.GetVariableValue<string>();
                     }
 
                     //get the console statements out of the engine
@@ -218,11 +229,11 @@ namespace Orc.SuperchargedReact.Core
                         "div"
                         );
                 }
-           /* }
+            }
             catch (Microsoft.ClearScript.ScriptEngineException e)
             {
                 throw new Exception(e.ErrorDetails);
-            }*/
+            }
         }
 
         private static void Cleanup(V8ScriptEngine engine)
@@ -241,6 +252,7 @@ namespace Orc.SuperchargedReact.Core
             engine.Execute(cleanup.ToString());
             engine.CollectGarbage(true);
         }
+
         public void Dispose()
         {
             if (fileWatcher != null)

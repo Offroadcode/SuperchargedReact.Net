@@ -11,9 +11,6 @@ namespace Orc.SuperchargedReact.Core
         // TODO: Have this as a separate file? Seems odd to have to edit the whole solution to make a mod to this?
         // TODO: Allow users to include another shim that they can customise, ie a file that we will pull in?
         public const string ConsoleShim = @"
-
-        var global = global || {};
-
             // Basic console shim. Caches all calls to console methods.
             function MockConsole() {
 	            this._calls = [];
@@ -49,8 +46,8 @@ namespace Orc.SuperchargedReact.Core
 
             var console = new MockConsole();
 
-            global.SuperChargedReact = {};
-            global.SuperChargedReact.bootstrapper = function() { 
+            SuperChargedReact = {};
+            SuperChargedReact.bootstrapper = function() { 
                             console.error('No bootstrap method has been defined, you need to set a function that SuperChargedReact can call to start off your rendering, this function should then be stored in the global variable named global.SuperChargedReact.bootstrapper');
             };";
     }
