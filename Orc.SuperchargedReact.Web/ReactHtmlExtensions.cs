@@ -51,9 +51,9 @@ namespace Orc.SuperchargedReact.Web
         /// <param name="containerId"></param>
         /// <param name="props"></param>
         /// <returns></returns>
-        public static MvcHtmlString Render(this HtmlHelper helper, string containerId, object props)
+        public static MvcHtmlString Render(this HtmlHelper helper, string componentsToRender, object props)
         {
-            return helper.Render(String.Empty, containerId, props);
+            return helper.Render(componentsToRender, String.Empty, props);
         }
 
         /// <summary>

@@ -148,6 +148,7 @@ namespace Orc.SuperchargedReact.Core
                     //Firstly we'll add the libraries to the engine!
                     if (EnableCompilation)
                     {
+                        // Use the pre-compiled ones for speed
                         stopwatch.Restart();
                         engine.Execute(CompiledShimms);
                         stopwatch.Stop();
@@ -160,6 +161,7 @@ namespace Orc.SuperchargedReact.Core
                     }
                     else
                     {
+                        // Use the raw uncompiled ones, these will be parsed a fresh each time by the JS engine
                         stopwatch.Restart();
                         engine.Execute(JavascriptShimms.ConsoleShim);
                         stopwatch.Stop();
@@ -175,18 +177,6 @@ namespace Orc.SuperchargedReact.Core
                     stopwatch.Restart();
                     engine.Execute( bootstrapper );
 
-/*                    var routerInitCode =
-                        String.Format(
-                            @"Router.run( reactRoutesConfig, '{0}', function( Handler ) {{ 
-                        {1} = React.renderToString(React.createElement(Handler, {2} ));
-                    }});",
-                            url,
-                            ROUTER_OUTPUT_KEY,
-                            encodedProps
-                            );
-                    stopwatch.Restart();
-                    engine.Execute(routerInitCode);
-*/
                     // TODO: Might swap this timeout stuff for an actual Timespan check instead
                     var timeOutCounter = 0;
                     var maxCyclesBeforeTimeout = 10; // TODO: Config this
@@ -203,8 +193,9 @@ namespace Orc.SuperchargedReact.Core
                         )
                     {
                         timeOutCounter++;
-                        Thread.Sleep(10); // DIRTY!
+                        Thread.Sleep(10); // DIRTY! But it works, need to bench mark if this is quicker than linking the JS engine to the .net context as then we could ping the value straight out form within JS. Alternatively we could get away with just reducing this sleep time but it depends on how much code we have running, machine speed etc. Its "fast enough" for now though.
                     }
+
                     stopwatch.Stop();
                     measurements.ComponentGenerationTime = stopwatch.ElapsedMilliseconds;
 
@@ -220,25 +211,6 @@ namespace Orc.SuperchargedReact.Core
                     //get the console statements out of the engine
                     var consoleStatements = engine.Evaluate<string>("console.getCalls()");
 
-                    //generate the scripts to render in the browser
-                    /*
-                    inBrowserScript =
-                        String.Format(
-                            @"
-                            var {0} = {1};
-
-                            Router.run( reactRoutesConfig, Router.HistoryLocation, function( Handler ) {{ 
-                                React.render(
-                                    React.createElement(Handler, {0} ), 
-                                    document.getElementById( '{2}' )
-                                );
-                            }});",
-                            
-                            IN_BROWSER_DATA_KEY,
-                            encodedProps,
-                            containerId
-                            );
-                    */
                     inBrowserScript = consoleStatements + ";" + bootstrapper;
                     
                     //Cleanup the engine
@@ -277,6 +249,7 @@ namespace Orc.SuperchargedReact.Core
             engine.Execute(cleanup.ToString());
             engine.CollectGarbage(true);
         }
+
         public void Dispose()
         {
             if (fileWatcher != null)
