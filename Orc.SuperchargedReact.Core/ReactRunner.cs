@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
@@ -18,7 +19,7 @@ namespace Orc.SuperchargedReact.Core
         /// <summary>
         /// In engine key to grab the html
         /// </summary>
-        protected const string ROUTER_OUTPUT_KEY = "_ReactNET_RouterOutput_Html";
+        protected const string ROUTER_OUTPUT_KEY = "SuperChargedReact.renderOutput";
 
         /// <summary>
         /// Client side scripts variable where it dumps the data
@@ -36,8 +37,18 @@ namespace Orc.SuperchargedReact.Core
         V8Script Compiled { get; set; }
         string ScriptRaw { get; set; }
         FileSystemWatcher fileWatcher;
+        string BootstrapCommand { get; set; }
 
-        public ReactRunner(string file, bool enableFileWatcher, bool enableCompilation, bool disableGlobalMembers, JsonSerializerSettings serializationSettings)
+        /// <summary>
+        /// Creates a Runner that manages all the V8 goodies for us. Ideally should should only have one of these and reuse it but as you my want multiple we've not enforced that logic here. Lazy load it then reuse the same instance to get maximum speed benefits for rendering
+        /// </summary>
+        /// <param name="file">The relative path to your bundle file of js, we only expect your code to be in one file or for it to use requires that this file will handle for us</param>
+        /// <param name="enableFileWatcher">If in dev mode good to have the file watcher on, infact just good to have on all the time</param>
+        /// <param name="enableCompilation">Highly recommended, caches the parsed code after the first run so skips parsing time, much faster</param>
+        /// <param name="disableGlobalMembers">Tells V8 that it won't be able to have a 2 way chat with .net, disabling this makes for quite a speed increase</param>
+        /// <param name="bootstrapCommand">The javascript command to run to kick things off</param>
+        /// <param name="serializationSettings"></param>
+        public ReactRunner(string file, bool enableFileWatcher, bool enableCompilation, bool disableGlobalMembers, string bootstrapCommand, JsonSerializerSettings serializationSettings )
         {
             //setup assembly resolver so it can find the v8 dlls
             AssemblyResolver.Initialize();
@@ -47,6 +58,7 @@ namespace Orc.SuperchargedReact.Core
             EnableCompilation = enableCompilation;
             DisableGlobalMembers = disableGlobalMembers;
             SerializationSettings = serializationSettings;
+            BootstrapCommand = bootstrapCommand;
             
             //Initialize the v8 runtime
             Runtime = new V8Runtime();
@@ -57,9 +69,8 @@ namespace Orc.SuperchargedReact.Core
             if (EnableCompilation)
             {
                 //If compilation is enabled, we compile the scripts
-                Compiled = Runtime.Compile(ScriptRaw);
                 CompiledShimms = Runtime.Compile(JavascriptShimms.ConsoleShim);
-
+                Compiled = Runtime.Compile(ScriptRaw);
             }
 
             if (EnableFileWatcher)
@@ -105,15 +116,18 @@ namespace Orc.SuperchargedReact.Core
         
 
         /// <summary>
-        /// Execute the bundle with the given settings
+        /// Excutes the passed in script
         /// </summary>
-        public string Execute(string containerId, string url, object props, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
+        /// <param name="containerId"></param>
+        /// <param name="url"></param>
+        /// <param name="props"></param>
+        /// <param name="inBrowserScript"></param>
+        /// <param name="measurements"></param>
+        /// <returns></returns>
+        public string Execute( IRenderSettings settings, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
         {
-            return Execute(containerId, url, JsonConvert.SerializeObject(props, SerializationSettings), out inBrowserScript, out measurements);
-        }
+            var bootstrapper = BootstrapCommand + "(" + JsonConvert.SerializeObject(settings, SerializationSettings) + ");";
 
-        public string Execute(string containerId, string url, string encodedProps, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
-        {
             try
             {
                 measurements = new ReactPerformaceMeasurements();
@@ -128,13 +142,13 @@ namespace Orc.SuperchargedReact.Core
                 stopwatch.Start();
                 using (var engine = Runtime.CreateScriptEngine(engineFlags))
                 {
-                    
                     stopwatch.Stop();
                     measurements.EngineInitializationTime = stopwatch.ElapsedMilliseconds;
 
                     //Firstly we'll add the libraries to the engine!
                     if (EnableCompilation)
                     {
+                        // Use the pre-compiled ones for speed
                         stopwatch.Restart();
                         engine.Execute(CompiledShimms);
                         stopwatch.Stop();
@@ -144,47 +158,47 @@ namespace Orc.SuperchargedReact.Core
                         engine.Execute(Compiled);
                         stopwatch.Stop();
                         measurements.ScriptsInitializationTime = stopwatch.ElapsedMilliseconds;
-
                     }
                     else
                     {
+                        // Use the raw uncompiled ones, these will be parsed a fresh each time by the JS engine
                         stopwatch.Restart();
                         engine.Execute(JavascriptShimms.ConsoleShim);
                         stopwatch.Stop();
                         measurements.ShimmInitializationTime = stopwatch.ElapsedMilliseconds;
-
+                        
                         stopwatch.Restart();
                         engine.Execute(ScriptRaw);
                         stopwatch.Stop();
                         measurements.ScriptsInitializationTime = stopwatch.ElapsedMilliseconds;
-
                     }
 
-                    //we generate the code to execute in the engine here
-
-                    var routerInitCode =
-                        String.Format(
-                            @"Router.run( SuperChargedReact.routes, '{0}', function( Handler ) {{ 
-                        {1} = React.renderToString(React.createElement(Handler, {2} ));
-                    }});",
-                            url,
-                            ROUTER_OUTPUT_KEY,
-                            encodedProps
-                            );
+                    // Kick off the render
                     stopwatch.Restart();
-                    engine.Execute(routerInitCode);
+                    engine.Execute( bootstrapper );
 
                     // TODO: Might swap this timeout stuff for an actual Timespan check instead
                     var timeOutCounter = 0;
                     var maxCyclesBeforeTimeout = 10; // TODO: Config this
 
                     // Poll the engine to see if the router callback has fired
-
-                    while (!engine.HasVariable(ROUTER_OUTPUT_KEY) && timeOutCounter <= maxCyclesBeforeTimeout)
+                    while (
+                        (
+                            !engine.HasVariable(ROUTER_OUTPUT_KEY) 
+                            || 
+                            string.IsNullOrEmpty(engine.GetVariableValue<string>(ROUTER_OUTPUT_KEY) ) 
+                        )
+                        && 
+                        timeOutCounter <= maxCyclesBeforeTimeout
+                        )
                     {
                         timeOutCounter++;
-                        Thread.Sleep(10); // DIRTY!
+                        Thread.Sleep(10); // DIRTY! See here of reasoning https://github.com/Offroadcode/SuperchargedReact.Net/issues/1#issuecomment-118848133
+					  // But it works, need to bench mark if this is quicker than linking the JS engine to the .net context as then we could 
+					  // ping the value straight out form within JS. Alternatively we could get away with just reducing this sleep time but 
+					  // it depends on how much code we have running, machine speed etc. Its "fast enough" for now though.
                     }
+
                     stopwatch.Stop();
                     measurements.ComponentGenerationTime = stopwatch.ElapsedMilliseconds;
 
@@ -194,31 +208,13 @@ namespace Orc.SuperchargedReact.Core
 
                     if (timeOutCounter <= maxCyclesBeforeTimeout)
                     {
-                        html = engine.GetVariableValue<string>(ROUTER_OUTPUT_KEY);
+                        html = engine.ExecuteCommand(ROUTER_OUTPUT_KEY);// engine.GetVariableValue<string>();
                     }
 
                     //get the console statements out of the engine
                     var consoleStatements = engine.Evaluate<string>("console.getCalls()");
 
-                    //generate the scripts to render in the browser
-                    inBrowserScript =
-                        String.Format(
-                            @"
-                            var {0} = {1};
-
-                            Router.run( SuperChargedReact.routes, Router.HistoryLocation, function( Handler ) {{ 
-                                React.render(
-                                    React.createElement(Handler, {0} ), 
-                                    document.getElementById( '{2}' )
-                                );
-                            }});",
-                            
-                            IN_BROWSER_DATA_KEY,
-                            encodedProps,
-                            containerId
-                            );
-
-                    inBrowserScript = consoleStatements + inBrowserScript;
+                    inBrowserScript = consoleStatements + ";" + bootstrapper;
                     
                     //Cleanup the engine
                     stopwatch.Restart();
@@ -228,7 +224,7 @@ namespace Orc.SuperchargedReact.Core
                     
                     return string.Format(
                         "<{2} id=\"{0}\">{1}</{2}>",
-                        containerId,
+                        settings.ContainerId,
                         html,
                         "div"
                         );
@@ -256,6 +252,7 @@ namespace Orc.SuperchargedReact.Core
             engine.Execute(cleanup.ToString());
             engine.CollectGarbage(true);
         }
+
         public void Dispose()
         {
             if (fileWatcher != null)

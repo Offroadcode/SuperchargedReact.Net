@@ -13,9 +13,13 @@ using System.Threading.Tasks;
 using CsvHelper;
 using Newtonsoft.Json;
 using Orc.SuperchargedReact.Core;
+using Orc.SuperchargedReact.Web;
 
 namespace Orc.SuperchargedReact.Runner
 {
+    /// <summary>
+    /// This is our dirty little performance testing program. Lots of stuff in here is commented out and only used for testing
+    /// </summary>
     class Program
     {
         static void Main(string[] args)
@@ -28,7 +32,7 @@ namespace Orc.SuperchargedReact.Runner
 
         static void ThreadChecker()
         {
-            var runner = new ReactRunner(@"C:\Users\Stephen\Documents\visual studio 2013\Projects\Orc.SuperchargedReact\Orc.SuperchargedReact.ExampleBundle\bundle.js", true, true, true, new JsonSerializerSettings());
+            var runner = new ReactRunner(@"C:\Users\Stephen\Documents\visual studio 2013\Projects\Orc.SuperchargedReact\Orc.SuperchargedReact.ExampleBundle\bundle.js", true, true, true, "global.SuperChargedReact.bootstrapper", new JsonSerializerSettings());
 
             Parallel.For(0, 100, new ParallelOptions() { MaxDegreeOfParallelism = 50 }, (i, state) =>
             {
@@ -36,7 +40,8 @@ namespace Orc.SuperchargedReact.Runner
                 var testString = "helloWorld" + i;
                 var browserOutput = "";
                 ReactPerformaceMeasurements measurements;
-                var output = runner.Execute("reactApp", "/tester", new { testString = testString }, out browserOutput,out measurements);
+                var settings = new RenderSettings("reactApp", new { testString = testString }, "/tester");
+                var output = runner.Execute( settings, out browserOutput,out measurements);
                 if (!output.Contains(testString))
                 {
                     throw new Exception("Not Thread Safe.... uh oh!");
@@ -101,7 +106,7 @@ namespace Orc.SuperchargedReact.Runner
 
             using (var runner =
                 new ReactRunner(@"D:\work\Olympic\BookingEngine\Build\Olympic.BookingEngine\assets\js\bundle.js",
-                    enableFileWatcher, enableCompilation, disableGlobalMembers, new JsonSerializerSettings()))
+                    enableFileWatcher, enableCompilation, disableGlobalMembers, "global.SuperChargedReact.bootstrapper", new JsonSerializerSettings()))
             {
 
                 init.Stop();
@@ -118,7 +123,8 @@ namespace Orc.SuperchargedReact.Runner
                     string outputStr = "";
                     init.Start();
                     ReactPerformaceMeasurements measurements;
-                    runner.Execute("reactApp", "/search/AccommodationOnly", props, out outputStr, out measurements);
+                    var settings = new RenderSettings("reactApp", new { testString = "testString" }, "/search/AccommodationOnly");
+                    runner.Execute(settings, out outputStr, out measurements);
                     init.Stop();
                     times.Add(init.ElapsedMilliseconds);
                     //    Console.WriteLine(init.ElapsedMilliseconds);

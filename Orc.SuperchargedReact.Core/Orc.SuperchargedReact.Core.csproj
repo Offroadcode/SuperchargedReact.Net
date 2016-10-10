@@ -49,10 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssembleyResolver.cs" />
+    <Compile Include="IRenderSettings.cs" />
     <Compile Include="JavascriptShimms.cs" />
     <Compile Include="ReactRunner.cs" />
     <Compile Include="EngineHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RenderSettings.cs" />
     <Compile Include="TypeHelpers\TypeConverter.cs" />
     <Compile Include="TypeHelpers\Undefined.cs" />
   </ItemGroup>
