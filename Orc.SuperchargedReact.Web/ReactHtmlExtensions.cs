@@ -56,9 +56,9 @@ namespace Orc.SuperchargedReact.Web
         /// <param name="containerId"></param>
         /// <param name="props"></param>
         /// <returns></returns>
-        public static MvcHtmlString Render(this HtmlHelper helper, string componentsToRender, object props)
+        public static MvcHtmlString Render(this HtmlHelper helper, string componentsToRender, object props, bool disableServerSide = false)
         {
-            return helper.Render(componentsToRender, String.Empty, props);
+            return helper.Render(componentsToRender, String.Empty, props, disableServerSide);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Orc.SuperchargedReact.Web
         /// <param name="props"></param>
         /// <returns></returns>
         public static MvcHtmlString Render(this HtmlHelper helper, string componentToRender, string containerId,
-            object props)
+            object props, bool disableServerSide = false)
         {
             if (String.IsNullOrEmpty(containerId))
             {
@@ -80,12 +80,14 @@ namespace Orc.SuperchargedReact.Web
             var ctx = HttpContext.Current;
             string url = ctx.Request.Path;
 
-            string inBrowserScript;
-            ReactPerformaceMeasurements measurements;
-
-            var settings = new RenderSettings(componentToRender, containerId, props, url);
-            var result = Runner.Execute(settings, out inBrowserScript, out measurements);
-
+            string inBrowserScript = "";
+            ReactPerformaceMeasurements measurements = null;
+            string result = "";
+            if (!disableServerSide)
+            {
+                var settings = new RenderSettings(componentToRender, containerId, props, url);
+                result = Runner.Execute(settings, out inBrowserScript, out measurements);
+            }
             ctx.Items[ItemsKey] = inBrowserScript;
             ctx.Items[PerformanceKey] = measurements;
             return new MvcHtmlString(result);
