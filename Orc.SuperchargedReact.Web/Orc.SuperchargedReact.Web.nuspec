@@ -11,9 +11,9 @@
     <tags></tags>
   </metadata>
   <files>
-    <file src="bin\ClearScript.dll" target="lib\net45"/>
-    <file src="bin\Orc.SuperchargedReact.Web.dll" target="lib\net45"/>
-	<file src="bin\Orc.SuperchargedReact.Core.dll" target="lib\net45"/>
+    <file src="bin\Release\ClearScript.dll" target="lib\net45"/>
+    <file src="bin\Release\Orc.SuperchargedReact.Web.dll" target="lib\net45"/>
+    <file src="bin\Release\Orc.SuperchargedReact.Core.dll" target="lib\net45"/>
 
 	<file src="ClearScript.V8\ClearScriptV8-32.dll" target="content\ClearScript.V8"/>
 	<file src="ClearScript.V8\ClearScriptV8-64.dll" target="content\ClearScript.V8"/>
