@@ -124,13 +124,19 @@ namespace Orc.SuperchargedReact.Core
         /// <param name="inBrowserScript"></param>
         /// <param name="measurements"></param>
         /// <returns></returns>
-        public string Execute( IRenderSettings settings, out string inBrowserScript, out ReactPerformaceMeasurements measurements)
+        public string Execute( IRenderSettings settings, out string inBrowserScript, out ReactPerformaceMeasurements measurements, bool disableServerSide = false)
         {
+            measurements = new ReactPerformaceMeasurements();
             var bootstrapper = BootstrapCommand + "(" + JsonConvert.SerializeObject(settings, SerializationSettings) + ");";
+            if (disableServerSide)
+            {
 
+                inBrowserScript = bootstrapper;
+                return "";
+            }
             try
             {
-                measurements = new ReactPerformaceMeasurements();
+            
                 var stopwatch = new Stopwatch();
 
                 var engineFlags = V8ScriptEngineFlags.None;

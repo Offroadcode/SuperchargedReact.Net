@@ -83,11 +83,10 @@ namespace Orc.SuperchargedReact.Web
             string inBrowserScript = "";
             ReactPerformaceMeasurements measurements = null;
             string result = "";
-            if (!disableServerSide)
-            {
+            
                 var settings = new RenderSettings(componentToRender, containerId, props, url);
-                result = Runner.Execute(settings, out inBrowserScript, out measurements);
-            }
+                result = Runner.Execute(settings, out inBrowserScript, out measurements, disableServerSide);
+            
             ctx.Items[ItemsKey] = inBrowserScript;
             ctx.Items[PerformanceKey] = measurements;
             return new MvcHtmlString(result);
