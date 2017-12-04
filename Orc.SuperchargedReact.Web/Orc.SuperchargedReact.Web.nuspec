@@ -6,7 +6,7 @@
     <title>Offroadcode MVC React Processor</title>
     <authors>Stephen Roberts, Pete Duncanson</authors>
     <description>Our Supercharged react renderer</description>
-    
+
     <copyright>Copyright Offroadcode 2015</copyright>
     <tags></tags>
   </metadata>
@@ -15,9 +15,11 @@
     <file src="bin\Release\Orc.SuperchargedReact.Web.dll" target="lib\net45"/>
     <file src="bin\Release\Orc.SuperchargedReact.Core.dll" target="lib\net45"/>
 
-	<file src="ClearScript.V8\ClearScriptV8-32.dll" target="content\ClearScript.V8"/>
-	<file src="ClearScript.V8\ClearScriptV8-64.dll" target="content\ClearScript.V8"/>
-	<file src="ClearScript.V8\v8-ia32.dll" target="content\ClearScript.V8"/>
-	<file src="ClearScript.V8\v8-x64.dll" target="content\ClearScript.V8"/>
+    <file src="ClearScript.V8\ClearScriptV8-32.dll" target="content\ClearScript.V8"/>
+    <file src="ClearScript.V8\ClearScriptV8-64.dll" target="content\ClearScript.V8"/>
+    <file src="ClearScript.V8\v8-base-ia32.dll" target="content\ClearScript.V8"/>
+    <file src="ClearScript.V8\v8-base-x64.dll" target="content\ClearScript.V8"/>
+    <file src="ClearScript.V8\v8-ia32.dll" target="content\ClearScript.V8"/>
+    <file src="ClearScript.V8\v8-x64.dll" target="content\ClearScript.V8"/>
   </files>
 </package>
